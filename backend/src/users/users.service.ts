@@ -9,19 +9,19 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+  ) { }
 
-  async createUser(email: string, password: string) {
+  async createUser(email: string, password: string, isAdmin: boolean = false) {
     const hashed = await bcrypt.hash(password, 10)
-    const user = this.userRepo.create({ email, password: hashed })
+    const user = this.userRepo.create({ email, password: hashed, isAdmin })
     await this.userRepo.save(user)
-    return { id: user.id, email: user.email }
+    return { id: user.id, email: user.email, isAdmin: user.isAdmin }
   }
 
   async validateUser(email: string, password: string) {
     const user = await this.userRepo.findOne({ where: { email } })
     if (user && (await bcrypt.compare(password, user.password))) {
-      return { id: user.id, email: user.email }
+      return { id: user.id, email: user.email, isAdmin: user.isAdmin }
     }
     return null
   }
@@ -29,6 +29,30 @@ export class UsersService {
   async findById(id: number) {
     const user = await this.userRepo.findOne({ where: { id } })
     if (!user) return null
-    return { id: user.id, email: user.email }
+    return { id: user.id, email: user.email, isAdmin: user.isAdmin }
+  }
+
+  async getAllUsers() {
+    return this.userRepo.find()
+  }
+
+  async deleteUser(id: number) {
+    await this.userRepo.delete({ id })
+  }
+
+  async setAdmin(id: number, isAdmin: boolean) {
+    await this.userRepo.update({ id }, { isAdmin })
+  }
+
+  async updatePoints(email: string, delta: number) {
+    const user = await this.userRepo.findOne({ where: { email } })
+    if (!user) throw new Error("유저를 찾을 수 없습니다")
+    user.points += delta
+    return this.userRepo.save(user)
+  }
+
+  async getPoints(email: string) {
+    const user = await this.userRepo.findOne({ where: { email } })
+    return user?.points ?? 0
   }
 }

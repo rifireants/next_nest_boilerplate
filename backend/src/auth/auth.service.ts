@@ -9,9 +9,9 @@ export class AuthService {
     private jwtService: JwtService,
   ) { }
 
-  async register(email: string, password: string) {
-    return this.usersService.createUser(email, password)
-  }
+  async register(email: string, password: string, isAdmin = false) {
+  return this.usersService.createUser(email, password, isAdmin)
+}
 
   async login(email: string, password: string) {
     const user = await this.usersService.validateUser(email, password)
@@ -23,6 +23,7 @@ export class AuthService {
     return {
       access_token: token,
       email: user.email,
+      isAdmin: user.isAdmin,
     }
   }
 }

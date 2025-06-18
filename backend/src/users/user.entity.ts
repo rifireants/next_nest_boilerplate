@@ -10,4 +10,10 @@ export class User {
 
   @Column()
   password: string
+
+  @Column({ default: 0 })
+  points: number
+
+  @Column({ default: false }) // ✅ 관리자 여부 필드
+  isAdmin: boolean
 }

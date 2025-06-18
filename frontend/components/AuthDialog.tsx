@@ -34,7 +34,7 @@ export function AuthDialog() {
       }
 
       if (isLogin) {
-        login(data.access_token, data.email)
+        login(data.access_token, data.email, data.isAdmin)
       }
 
       alert(`${isLogin ? "로그인" : "회원가입"} 성공: ${data.email}`)

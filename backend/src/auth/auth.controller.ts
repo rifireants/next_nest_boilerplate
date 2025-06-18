@@ -2,10 +2,14 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Request } from 'express'
+import { UsersService } from 'src/users/users.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) { }
 
   @Post('register')
   async register(@Body() body: { email: string; password: string }) {
@@ -21,5 +25,12 @@ export class AuthController {
   @Get('me')
   getProfile(@Req() req: Request) {
     return req.user
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('points')
+  async getPoints(@Req() req: any) {
+    const points = await this.usersService.getPoints(req.user.email)
+    return { points }
   }
 }
