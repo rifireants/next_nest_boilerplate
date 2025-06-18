@@ -11,10 +11,31 @@ export function AuthDialog() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const payload = { email, password }
-    alert(JSON.stringify(payload, null, 2)) // 나중에 API 연결 예정
+    const endpoint = isLogin ? "/auth/login" : "/auth/register"
+
+    try {
+      const res = await fetch(`http://localhost:4000${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || "에러 발생")
+      }
+
+      alert(`${isLogin ? "로그인" : "회원가입"} 성공: ${data.email}`)
+    } catch (err: any) {
+      alert(`에러: ${err.message}`)
+    }
   }
+
 
   return (
     <Dialog>
