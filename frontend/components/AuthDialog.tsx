@@ -5,11 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { useAuth } from '@/store/useAuth'
 
 export function AuthDialog() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
+  const { login } = useAuth()
 
   const handleSubmit = async () => {
     const payload = { email, password }
@@ -30,12 +33,15 @@ export function AuthDialog() {
         throw new Error(data.message || "에러 발생")
       }
 
+      if (isLogin) {
+        login(data.access_token, data.email)
+      }
+
       alert(`${isLogin ? "로그인" : "회원가입"} 성공: ${data.email}`)
     } catch (err: any) {
       alert(`에러: ${err.message}`)
     }
   }
-
 
   return (
     <Dialog>
