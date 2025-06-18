@@ -3,15 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Transaction } from './transaction.entity'
 import { UsersService } from '../users/users.service'
+import { TransactionsGateway } from './transactions.gateway'
 
 @Injectable()
 export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private txRepo: Repository<Transaction>,
-
     private readonly usersService: UsersService,
-  ) {}
+    private readonly transactionGateway: TransactionsGateway,
+  ) { }
 
   // 유저 요청: 입출금 요청 생성 (pending 상태)
   async createRequest(email: string, type: 'deposit' | 'withdrawal', amount: number) {
@@ -21,7 +22,10 @@ export class TransactionsService {
       amount,
       status: 'pending',
     })
-    return this.txRepo.save(tx)
+    const result = await this.txRepo.save(tx)
+    this.transactionGateway.broadcastUpdate()
+    this.transactionGateway.notifyUser(email)
+    return result
   }
 
   // 관리자 처리: 상태 승인 또는 거절
@@ -35,7 +39,10 @@ export class TransactionsService {
     }
 
     tx.status = status
-    return this.txRepo.save(tx)
+    const result = await this.txRepo.save(tx)
+    this.transactionGateway.broadcastUpdate()
+    this.transactionGateway.notifyUser(tx.userEmail)
+    return result
   }
 
   // 관리자: 전체 입출금 내역

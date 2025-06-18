@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { AuthDialog } from "@/components/AuthDialog"
 import { useAuth } from "@/store/useAuth"
 import { useSocket } from '@/store/useSocket'
+import { useMyTransactionSocket } from '@/store/useMyTransactionSocket'
 
 export default function Home() {
   const { token, email, logout } = useAuth()
@@ -23,13 +24,7 @@ export default function Home() {
   useEffect(() => {
     if (!mounted || !token) return
 
-    fetch("http://localhost:4000/transactions/my", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setMyTxs(data))
+    fetchMyTransactions();
 
     fetch("http://localhost:4000/auth/points", {
       headers: { Authorization: `Bearer ${token}` },
@@ -55,6 +50,17 @@ export default function Home() {
     // fetchUser()
   }, [mounted, token])
 
+  const fetchMyTransactions = async () => {
+    fetch("http://localhost:4000/transactions/my", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setMyTxs(data))
+  }
+
+  useMyTransactionSocket(email, fetchMyTransactions)
   useSocket(email, (newPoints) => {
     setPoints(newPoints)
   })
@@ -109,8 +115,8 @@ export default function Home() {
               </select>
               <input
                 type="number"
-                value={amount}
-                onChange={(e) => setAmount(parseInt(e.target.value))}
+                value={isNaN(amount) ? '' : amount}
+                onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
                 placeholder="금액 입력"
                 className="w-full border px-2 py-1 rounded"
               />

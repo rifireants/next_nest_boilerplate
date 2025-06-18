@@ -3,6 +3,7 @@
 import { useAuth } from "@/store/useAuth"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useTransactionSocket } from '@/store/useTransactionSocket'
 
 export default function AdminPage() {
   const { isAdmin, token } = useAuth()
@@ -29,21 +30,14 @@ export default function AdminPage() {
         .then((res) => res.json())
         .then((data) => setMessage(data.message))
 
-      fetch("http://localhost:4000/admin/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setUsers(data))
-        .catch(() => setUsers([]))
-
-      fetch("http://localhost:4000/admin/transactions", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setTransactions(data))
-        .catch(() => setTransactions([]))
+      fetchUsers();
+      fetchTransactions();
     }
   }, [mounted, isAdmin, token])
+
+  useTransactionSocket(() => {
+    fetchTransactions()
+  })
 
   const handleDeleteUser = async (id: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return
@@ -86,6 +80,23 @@ export default function AdminPage() {
         tx.id === id ? { ...tx, status } : tx
       )
     )
+  }
+
+  const fetchUsers = async () => {
+    fetch("http://localhost:4000/admin/users", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setUsers(data))
+      .catch(() => setUsers([]))
+  }
+  const fetchTransactions = async () => {
+    fetch("http://localhost:4000/admin/transactions", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setTransactions(data))
+      .catch(() => setTransactions([]))
   }
 
   if (!mounted) return null
