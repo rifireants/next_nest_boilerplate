@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { AuthDialog } from "@/components/AuthDialog"
 import { useAuth } from "@/store/useAuth"
+import { useSocket } from '@/store/useSocket'
 
 export default function Home() {
   const { token, email, logout } = useAuth()
@@ -13,6 +14,7 @@ export default function Home() {
   const [message, setMessage] = useState("")
   const [points, setPoints] = useState<number>(0)
   const [myTxs, setMyTxs] = useState<any[]>([])
+  const [pointLogs, setPointLogs] = useState<any[]>([])
 
   useEffect(() => {
     setMounted(true)
@@ -35,6 +37,11 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => setPoints(data.points))
 
+    fetch("http://localhost:4000/auth/pointlogs", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setPointLogs(data))
     // const fetchUser = async () => {
     //   const res = await fetch("http://localhost:4000/auth/me", {
     //     headers: {
@@ -47,6 +54,10 @@ export default function Home() {
 
     // fetchUser()
   }, [mounted, token])
+
+  useSocket(email, (newPoints) => {
+    setPoints(newPoints)
+  })
 
   const handleRequest = async () => {
     if (amount <= 0) return alert("금액을 입력하세요.")
@@ -76,7 +87,12 @@ export default function Home() {
         <>
           <div className="text-center space-y-2">
             <p className="text-lg font-semibold text-green-600">로그인됨: {email}</p>
-            <p className="text-sm">보유 포인트: <span className="font-bold">{points.toLocaleString()} P</span></p>
+            <p className="text-sm">
+              보유 포인트:{" "}
+              <span className="font-bold">
+                {typeof points === 'number' ? points.toLocaleString() : '로딩 중...'}
+              </span>
+            </p>
             <button onClick={logout} className="text-red-500 underline">로그아웃</button>
           </div>
 
@@ -139,6 +155,33 @@ export default function Home() {
               </table>
             </div>
           )}
+
+          {pointLogs.length > 0 && (
+            <div className="w-full max-w-md mt-10 bg-white border rounded shadow p-4">
+              <h3 className="text-md font-semibold mb-2 text-center">포인트 변경 내역</h3>
+              <table className="w-full text-sm border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border px-2 py-1">변경</th>
+                    <th className="border px-2 py-1">사유</th>
+                    <th className="border px-2 py-1">잔액</th>
+                    <th className="border px-2 py-1">시간</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pointLogs.map((log) => (
+                    <tr key={log.id} className="text-center">
+                      <td className="border px-2 py-1">{log.change > 0 ? `+${log.change}` : log.change}</td>
+                      <td className="border px-2 py-1">{log.reason}</td>
+                      <td className="border px-2 py-1">{log.after.toLocaleString()}P</td>
+                      <td className="border px-2 py-1">{new Date(log.createdAt).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
         </>
       )}
     </main>

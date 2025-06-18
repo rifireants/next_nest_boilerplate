@@ -3,12 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User } from './user.entity'
 import * as bcrypt from 'bcrypt'
+import { PointsService } from 'src/points/points.service'
+import { PointsGateway } from 'src/points/points.gateway'
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly pointsService: PointsService,
+    private readonly pointsGateway: PointsGateway,
   ) { }
 
   async createUser(email: string, password: string, isAdmin: boolean = false) {
@@ -44,11 +48,19 @@ export class UsersService {
     await this.userRepo.update({ id }, { isAdmin })
   }
 
-  async updatePoints(email: string, delta: number) {
+  async updatePoints(email: string, delta: number, reason: string) {
     const user = await this.userRepo.findOne({ where: { email } })
     if (!user) throw new Error("유저를 찾을 수 없습니다")
+
+    const before = user.points
     user.points += delta
-    return this.userRepo.save(user)
+    await this.pointsService.log(email, before, delta, reason)
+    await this.userRepo.save(user)
+
+    // ✅ 웹소켓 푸시
+    this.pointsGateway.notifyPointUpdate(email, user.points)
+
+    return user
   }
 
   async getPoints(email: string) {

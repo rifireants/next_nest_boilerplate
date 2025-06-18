@@ -3,12 +3,14 @@ import { AuthService } from './auth.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Request } from 'express'
 import { UsersService } from 'src/users/users.service';
+import { PointsService } from 'src/points/points.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
+    private pointsService: PointsService,
   ) { }
 
   @Post('register')
@@ -32,5 +34,11 @@ export class AuthController {
   async getPoints(@Req() req: any) {
     const points = await this.usersService.getPoints(req.user.email)
     return { points }
+  }
+
+  @Get('pointlogs')
+  @UseGuards(AuthGuard('jwt'))
+  async getPointLogs(@Req() req: any) {
+    return this.pointsService.findByEmail(req.user.email)
   }
 }
