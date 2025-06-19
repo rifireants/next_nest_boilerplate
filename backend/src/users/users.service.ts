@@ -36,6 +36,12 @@ export class UsersService {
     return { id: user.id, email: user.email, isAdmin: user.isAdmin }
   }
 
+  async findByEmail(email: string) {
+    const user = await this.userRepo.findOne({ where: { email } })
+    if (!user) return null
+    return { id: user.id, email: user.email, isAdmin: user.isAdmin }
+  }
+
   async getAllUsers() {
     return this.userRepo.find()
   }

@@ -12,7 +12,7 @@ import { TransactionsGateway } from './transactions.gateway';
     UsersModule
   ],
   providers: [TransactionsService, TransactionsGateway],
-  exports: [TransactionsService],
+  exports: [TransactionsService, TransactionsGateway],
   controllers: [TransactionsController],
 })
 export class TransactionsModule { }

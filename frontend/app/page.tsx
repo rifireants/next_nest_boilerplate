@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { AuthDialog } from "@/components/AuthDialog"
 import { useAuth } from "@/store/useAuth"
-import { useSocket } from '@/store/useSocket'
-import { useMyTransactionSocket } from '@/store/useMyTransactionSocket'
+import { useSocketEvents } from '@/hooks/useSocketEvents'
 
 export default function Home() {
   const { token, email, logout } = useAuth()
@@ -25,18 +24,13 @@ export default function Home() {
     if (!mounted || !token) return
 
     fetchMyTransactions();
+    fetchPointLogs();
 
     fetch("http://localhost:4000/auth/points", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then((data) => setPoints(data.points))
-
-    fetch("http://localhost:4000/auth/pointlogs", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setPointLogs(data))
     // const fetchUser = async () => {
     //   const res = await fetch("http://localhost:4000/auth/me", {
     //     headers: {
@@ -60,9 +54,19 @@ export default function Home() {
       .then((data) => setMyTxs(data))
   }
 
-  useMyTransactionSocket(email, fetchMyTransactions)
-  useSocket(email, (newPoints) => {
-    setPoints(newPoints)
+  const fetchPointLogs = async () => {
+    fetch("http://localhost:4000/auth/pointlogs", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setPointLogs(data))
+  }
+
+  useSocketEvents({
+    email,
+    onPointUpdate: setPoints,
+    onMyTxUpdate: fetchMyTransactions,
+    onPointLogUpdate: fetchPointLogs,
   })
 
   const handleRequest = async () => {
@@ -88,7 +92,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 gap-6 p-6">
-      <AuthDialog />
+      {!token && <AuthDialog />}  {/* ✅ 로그인 안됐을 때만 보여줌 */}
       {token && (
         <>
           <div className="text-center space-y-2">

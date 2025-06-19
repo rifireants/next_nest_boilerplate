@@ -16,6 +16,7 @@ export class PointsGateway {
   // 특정 유저에게 포인트 갱신 이벤트 전송
   notifyPointUpdate(email: string, newPoints: number) {
     this.server.to(email).emit('point:update', { email, newPoints })
+    this.server.to(email).emit('pointlog:update')
   }
 
   // 유저가 접속하면 이메일 기반 방에 입장시킴

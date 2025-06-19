@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Request } from 'express'
@@ -40,5 +40,11 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async getPointLogs(@Req() req: any) {
     return this.pointsService.findByEmail(req.user.email)
+  }
+
+  @Get("check-email")
+  async checkEmail(@Query("email") email: string) {
+    const exists = await this.usersService.findByEmail(email)
+    return { exists: !!exists }
   }
 }

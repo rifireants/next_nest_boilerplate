@@ -5,14 +5,17 @@ type AuthState = {
   token: string | null
   email: string | null
   isAdmin: boolean
+  open: boolean
   login: (token: string, email: string, isAdmin: boolean) => void
   logout: () => void
+  openDialog: (open: boolean) => void
 }
 
 export const useAuth = create<AuthState>((set) => ({
   token: Cookies.get("token") || null,
   email: Cookies.get("email") || null,
   isAdmin: Cookies.get("isAdmin") === "true",
+  open: false,
 
   login: (token, email, isAdmin) => {
     Cookies.set("token", token)
@@ -27,4 +30,8 @@ export const useAuth = create<AuthState>((set) => ({
     Cookies.remove("isAdmin")
     set({ token: null, email: null, isAdmin: false })
   },
+
+  openDialog: (open) => {
+    set({open})
+  }
 }))

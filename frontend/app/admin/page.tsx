@@ -3,7 +3,7 @@
 import { useAuth } from "@/store/useAuth"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { useTransactionSocket } from '@/store/useTransactionSocket'
+import { useSocketEvents } from '@/hooks/useSocketEvents'
 
 export default function AdminPage() {
   const { isAdmin, token } = useAuth()
@@ -34,10 +34,6 @@ export default function AdminPage() {
       fetchTransactions();
     }
   }, [mounted, isAdmin, token])
-
-  useTransactionSocket(() => {
-    fetchTransactions()
-  })
 
   const handleDeleteUser = async (id: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return
@@ -98,6 +94,10 @@ export default function AdminPage() {
       .then((data) => setTransactions(data))
       .catch(() => setTransactions([]))
   }
+
+  useSocketEvents({
+    onAdminTxUpdate: fetchTransactions,
+  })
 
   if (!mounted) return null
 
